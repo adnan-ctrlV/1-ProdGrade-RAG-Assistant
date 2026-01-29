@@ -1,6 +1,13 @@
-def main():
-    print("Hello from company-ai-asst!")
+# This file runs the entire system
 
+from llm import ask_llm
 
-if __name__ == "__main__":
-    main()
+with open("data/docs.txt", "r") as f:
+    context = f.read()
+
+question = input("Ask a question: ")
+
+answer = ask_llm(question=question, context=context)
+
+print("\nAnswer: ")
+print(answer)
