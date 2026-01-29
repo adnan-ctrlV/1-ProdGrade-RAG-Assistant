@@ -1,0 +1,20 @@
+The Company is committed to protecting member information, employee data, and 
+business systems. All employees are required to participate in mandatory security 
+awareness training to reduce the risk of data breaches and operational disruptions.
+
+Security training is required upon onboarding and annually thereafter. 
+Training topics include password management, phishing awareness, handling member 
+data, secure use of devices, and reporting security incidents. Employees with  
+access to sensitive systems may be required to complete additional role-specific training.
+
+Employees must comply with all security protocols taught during training sessions. 
+This includes using strong passwords, locking devices when unattended, and 
+avoiding unauthorized software or external storage devices.
+
+Failure to complete required security training or comply with security 
+standards may result in restricted system access or disciplinary action. 
+Suspected security incidents must be reported immediately to management or 
+the IT team.
+
+Protecting Company and member data is a shared responsibility. Adherence to 
+this policy is essential to maintaining trust and ensuring regulatory compliance.
