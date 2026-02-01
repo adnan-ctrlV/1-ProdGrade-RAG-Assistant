@@ -52,7 +52,7 @@ class Config:
 
     # Retrieval
     RETRIEVAL_TOP_K: int = int(os.getenv("RETRIEVAL_TOP_K", "5"))
-    RETRIEVAL_MIN_SCORE: float = float(os.getenv("RETRIEVAL_MIN_SCORE", "0.7"))
+    RETRIEVAL_MIN_SCORE: float = float(os.getenv("RETRIEVAL_MIN_SCORE", "0.3"))
 
     # Data paths
     DATA_DIR: str = os.getenv("DATA_DIR", "data/policies")
