@@ -202,8 +202,8 @@ with center:
                 handle_user_question("When are expense reports due?")
 
         with col2:
-            if st.button("🏖️ How many vacation days do I get?"):
-                handle_user_question("How many vacation days do I get?")
+            if st.button("📜 What is our company onboarding checklist?"):
+                handle_user_question("What is our company onboarding checklist?")
 
             if st.button("🔒 What are the security requirements?"):
                 handle_user_question("What are the security requirements?")
