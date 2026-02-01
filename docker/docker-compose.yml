@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database with pgvector extension
+  database:
+    image: ankane/pgvector:latest
+    container_name: company-ai-db
+    environment:
+      POSTGRES_DB: company_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mysecretpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # RAG Application
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: company-ai-app
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      # OpenAI
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      OPENAI_TEMPERATURE: ${OPENAI_TEMPERATURE:-0}
+      OPENAI_MAX_RETRIES: ${OPENAI_MAX_RETRIES:-3}
+      OPENAI_TIMEOUT: ${OPENAI_TIMEOUT:-30}
+      
+      # Database
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-mysecretpassword}@database:5432/company_ai
+      DB_POOL_MIN_CONN: ${DB_POOL_MIN_CONN:-2}
+      DB_POOL_MAX_CONN: ${DB_POOL_MAX_CONN:-10}
+      
+      # Chunking
+      CHUNK_SIZE: ${CHUNK_SIZE:-500}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-50}
+      
+      # Retrieval
+      RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-5}
+      RETRIEVAL_MIN_SCORE: ${RETRIEVAL_MIN_SCORE:-0.3}
+      
+      # App
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATA_DIR: data/policies
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount data directory (optional - for live updates)
+      - ../data:/app/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
