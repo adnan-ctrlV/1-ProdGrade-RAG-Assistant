@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from openai import OpenAI, APIError, RateLimitError, APITimeoutError
 
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

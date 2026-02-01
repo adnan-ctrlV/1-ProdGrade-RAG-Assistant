@@ -13,10 +13,10 @@ import logging
 from pathlib import Path
 from typing import List, Tuple
 
-from database import Database
-from chunking import TextChunker
-from embeddings import get_embedding_service
-from config import Config
+from src.database import Database
+from src.chunking import TextChunker
+from src.embeddings import get_embedding_service
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

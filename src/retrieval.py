@@ -5,9 +5,11 @@ Vector-based retrieval for RAG system.
 import logging
 from typing import List, Dict, Any, Optional
 
-from database import Database
-from embeddings import get_embedding_service
-from config import Config
+from src.database import Database
+from src.embeddings import get_embedding_service
+from src.config import Config
+
+from pgvector.psycopg import Vector
 
 
 logger = logging.getLogger(__name__)
@@ -79,37 +81,37 @@ class RetrievalService:
 
         logger.debug(f"Performing vector search (top_k={self.top_k})")
 
-        pg_array = "[" + ",".join(map(str, query_embedding)) + "]"
+        vec = Vector(query_embedding)
 
-        # Strip quotes from stored JSON strings before casting
-        query = f"""
+        # Fetch all results without ORDER BY, sort in Python to avoid PostgreSQL bug
+        query = """
         SELECT 
             id,
             filename,
             chunk_index,
             content,
             token_count,
-            (1 - (embedding <=> '{pg_array}'::vector)) AS score
+            (embedding <=> %s) AS distance,
+            1 - (embedding <=> %s) AS score
         FROM documents
         WHERE embedding IS NOT NULL
-        ORDER BY embedding <=> '{pg_array}'::vector
-        LIMIT %s
         """
 
         try:
-            results = Database.execute_query(
-                query, (pg_array, pg_array, self.top_k), fetch=True
-            )
+            all_results = Database.execute_query(query, (vec, vec), fetch=True)
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
             return []
 
-        if not results:
+        if not all_results:
             logger.warning("No results found")
             return []
 
+        # Sort by distance in Python and take top_k
+        sorted_results = sorted(all_results, key=lambda x: x["distance"])[: self.top_k]
+
         chunks = []
-        for row in results:
+        for row in sorted_results:
             chunks.append(
                 {
                     "id": row["id"],

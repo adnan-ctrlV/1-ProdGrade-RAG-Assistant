@@ -8,10 +8,10 @@ It coordinates retrieval and generation to produce answers.
 import logging
 from typing import Dict, Any, List
 
-from retrieval import get_retrieval_service
-from llm import get_llm_service
-from prompts import fallback_response, no_results_prompt
-from config import Config
+from src.retrieval import get_retrieval_service
+from src.llm import get_llm_service
+from src.prompts import no_results_prompt
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

@@ -35,7 +35,9 @@ embedding = embedding_service.embed_text(test_text)
 
 if embedding:
     print(f"   Generated embedding dimension: {len(embedding)}")
-    print(f"   Is normalized? norm = {sum(x * x for x in embedding[:100]) ** 0.5:.4f}")
+    print(
+        f"   Is normalized? norm = {sum(x * x for x in embedding[:100]) ** 0.5:.4f}"
+    )  # ≈1.0 = normalized
     print(f"   ✅ Embedding generated: {len(embedding)} dimensions")
     print(f"   First 5 values: {embedding[:5]}")
 else:
@@ -48,7 +50,6 @@ if embedding:
 
     with Database.get_connection() as conn:
         with conn.cursor() as cur:
-            # Fetch without ORDER BY, sort in Python
             cur.execute(
                 """
                 SELECT 
@@ -57,6 +58,8 @@ if embedding:
                     1 - (embedding <=> %s) AS score
                 FROM documents
                 WHERE embedding IS NOT NULL
+                ORDER BY 2 ASC
+                LIMIT 3
                 """,
                 (pg_vector, pg_vector),
             )
@@ -64,14 +67,31 @@ if embedding:
             results = cur.fetchall()
 
             if results:
-                # Sort in Python by distance (column index 1)
-                results = sorted(results, key=lambda x: x[1])[:3]
-
                 print("   ✅ Vector search works:")
                 for row in results:
                     print(f"      {row[0]}: distance={row[1]:.3f}, score={row[2]:.3f}")
             else:
                 print("   ❌ PROBLEM: Vector search returned nothing!")
+
+                # Try without ORDER BY
+                print("\n   Trying without ORDER BY...")
+                cur.execute(
+                    """
+                    SELECT 
+                        filename,
+                        (embedding <=> %s) AS distance
+                    FROM documents
+                    WHERE embedding IS NOT NULL
+                    LIMIT 3
+                    """,
+                    (pg_vector,),
+                )
+                no_order_results = cur.fetchall()
+                print(f"   Without ORDER BY: {len(no_order_results)} rows")
+
+                if no_order_results:
+                    for row in no_order_results:
+                        print(f"      {row[0]}: distance={row[1]:.3f}")
 
 print("\n" + "=" * 80)
 print("DIAGNOSIS COMPLETE")

@@ -12,7 +12,7 @@ import re
 from typing import List, Tuple
 import tiktoken
 
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

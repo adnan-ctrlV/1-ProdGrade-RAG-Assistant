@@ -9,11 +9,12 @@ import logging
 from contextlib import contextmanager
 from typing import Generator, List, Tuple, Optional
 
-import psycopg2
-from psycopg2 import pool
-from psycopg2.extras import RealDictCursor
+from psycopg_pool import ConnectionPool
+from psycopg.rows import dict_row
+from pgvector.psycopg import register_vector
 
-from config import Config
+
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 # __name__ helps you understand where the log came from (debug errors easily)
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class Database:
-    _pool: Optional[pool.SimpleConnectionPool] = None
+    _pool: Optional[ConnectionPool] = None
     # _variable = private (internal use only)
     # variabe = public
 
@@ -41,10 +42,10 @@ class Database:
                 f"(min={Config.DB_POOL_MIN_CONN}, max={Config.DB_POOL_MAX_CONN})"
             )
 
-            cls._pool = psycopg2.pool.SimpleConnectionPool(
-                minconn=Config.DB_POOL_MIN_CONN,
-                maxconn=Config.DB_POOL_MAX_CONN,
-                dsn=Config.DATABASE_URL,
+            cls._pool = ConnectionPool(
+                conninfo=Config.DATABASE_URL,
+                min_size=Config.DB_POOL_MIN_CONN,
+                max_size=Config.DB_POOL_MAX_CONN,
             )
 
             cls._setup_pgvector()
@@ -83,16 +84,14 @@ class Database:
 
         conn = None
         try:
-            conn = cls._pool.getconn()
-            yield conn
+            with cls._pool.connection() as conn:
+                register_vector(conn)
+                yield conn
         except Exception as e:
             if conn:
                 conn.rollback()
             logger.error(f"Database error: {e}")
             raise
-        finally:
-            if conn:
-                cls._pool.putconn(conn)
 
     @classmethod
     def close_pool(cls) -> None:
@@ -112,7 +111,7 @@ class Database:
         # Execute a SQL query safely.
 
         with cls.get_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(query, params)
 
                 if fetch:

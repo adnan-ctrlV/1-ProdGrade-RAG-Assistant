@@ -12,8 +12,8 @@ from typing import Optional, Dict, Any
 
 from openai import OpenAI, APIError, RateLimitError, APITimeoutError
 
-from config import Config
-from prompts import system_prompt
+from src.config import Config
+from src.prompts import system_prompt
 
 logger = logging.getLogger(__name__)
 
