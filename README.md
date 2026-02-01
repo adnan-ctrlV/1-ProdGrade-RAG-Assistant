@@ -374,7 +374,7 @@ Want to understand how this works?
 
 ## 📁 FILE 5: `.dockerignore`
 ```
-# Python
+### Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -385,33 +385,33 @@ venv/
 ENV/
 env/
 
-# IDE
+### IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+### OS
 .DS_Store
 Thumbs.db
 
-# Git
+### Git
 .git/
 .gitignore
 
-# Tests
+### Tests
 tests/
 *.pytest_cache/
 
-# Docs
+### Docs
 README.md
 architecture.png
 
-# Environment
+### Environment
 .env
 .env.local
 
-# Logs
+### Logs
 *.log
 
 # Misc
