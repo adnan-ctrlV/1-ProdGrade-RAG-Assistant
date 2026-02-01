@@ -414,6 +414,6 @@ architecture.png
 ### Logs
 *.log
 
-# Misc
+### Misc
 *.egg-info/
 uv.lock
