@@ -1,6 +1,8 @@
 # 🤖 Company AI Assistant
 
-A production-grade RAG (Retrieval-Augmented Generation) system that lets you chat with your company documents using AI.
+A production-grade RAG (Retrieval-Augmented Generation) system that lets you chat with your company documents/policies using AI.
+
+Basically, any unstructured data (text, docs, policies) that you have can be stored in a database and queried using just natural language.
 
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
