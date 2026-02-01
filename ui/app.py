@@ -123,116 +123,125 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-# Main chat interface
-st.title("🧠 AI Company Policy Assistant")
+# Centered layout (ChatGPT-style)
+left, center, right = st.columns([1, 3, 1])
 
+with center:
+    # Main chat interface
+    st.title("🧠 AI Company Policy Assistant")
 
-# Display chat history
-for message in st.session_state.messages:
-    if message["role"] == "user":
-        st.markdown(
-            f'<div class="user-message"><strong>You:</strong> {message["content"]}</div>',
-            unsafe_allow_html=True,
-        )
-    else:
-        st.markdown(
-            f'<div class="assistant-message"><strong>🤖 Assistant:</strong><br>{message["content"]}</div>',
-            unsafe_allow_html=True,
-        )
-
-        # Show sources if available
-        if "sources" in message and message["sources"]:
-            with st.expander("📚 View Sources"):
-                for source in message["sources"]:
-                    st.markdown(
-                        f'<div class="source-box">'
-                        f"<strong>{source['filename']}</strong><br>"
-                        f"Chunks used: {', '.join(map(str, source['chunks_used']))}<br>"
-                        f"Relevance score: {source['max_score']:.3f}"
-                        f"</div>",
-                        unsafe_allow_html=True,
-                    )
-
-        # Show stats if available
-        if "stats" in message:
-            stats = message["stats"]
+    # Display chat history
+    for message in st.session_state.messages:
+        if message["role"] == "user":
             st.markdown(
-                f'<div class="stats-box">'
-                f"📊 {stats['chunks']} chunks retrieved | "
-                f"💬 {stats['tokens']} tokens used | "
-                f"⏱️ {stats['time']:.2f}s"
-                f"</div>",
+                f'<div class="user-message"><strong>You:</strong> {message["content"]}</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                f'<div class="assistant-message"><strong>🤖 Assistant:</strong><br>{message["content"]}</div>',
                 unsafe_allow_html=True,
             )
 
-# Chat input
-user_question = st.chat_input("Ask a question about company policies...")
+            # Show sources if available
+            if "sources" in message and message["sources"]:
+                with st.expander("📚 View Sources"):
+                    for source in message["sources"]:
+                        st.markdown(
+                            f'<div class="source-box">'
+                            f"<strong>{source['filename']}</strong><br>"
+                            f"Chunks used: {', '.join(map(str, source['chunks_used']))}<br>"
+                            f"Relevance score: {source['max_score']:.3f}"
+                            f"</div>",
+                            unsafe_allow_html=True,
+                        )
 
-if user_question:
-    # Add user message to history
-    st.session_state.messages.append({"role": "user", "content": user_question})
+            # Show stats if available
+            if "stats" in message:
+                stats = message["stats"]
+                st.markdown(
+                    f'<div class="stats-box">'
+                    f"📊 {stats['chunks']} chunks retrieved | "
+                    f"💬 {stats['tokens']} tokens used | "
+                    f"⏱️ {stats['time']:.2f}s"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
 
-    # Show user message immediately
-    st.markdown(
-        f'<div class="user-message"><strong>You:</strong> {user_question}</div>',
-        unsafe_allow_html=True,
-    )
+    # Chat input
+    user_question = st.chat_input("Ask a question about company policies...")
 
-    # Query the RAG system
-    with st.spinner("🔍 Searching documents..."):
-        import time
+    if user_question:
+        # Add user message to history
+        st.session_state.messages.append({"role": "user", "content": user_question})
 
-        start_time = time.time()
+        # Show user message immediately
+        st.markdown(
+            f'<div class="user-message"><strong>You:</strong> {user_question}</div>',
+            unsafe_allow_html=True,
+        )
 
-        result = query(user_question)
+        # Query the RAG system
+        with st.spinner("🔍 Searching documents..."):
+            import time
 
-        elapsed_time = time.time() - start_time
+            start_time = time.time()
 
-    # Add assistant response to history
-    assistant_message = {
-        "role": "assistant",
-        "content": result["answer"],
-        "sources": result.get("sources", []),
-        "stats": {
-            "chunks": result.get("chunks_retrieved", 0),
-            "tokens": result.get("tokens_used", 0),
-            "time": elapsed_time,
-        },
-    }
+            result = query(user_question)
 
-    st.session_state.messages.append(assistant_message)
+            elapsed_time = time.time() - start_time
 
-    # Update global stats
-    st.session_state.total_queries += 1
-    st.session_state.total_tokens += result.get("tokens_used", 0)
+        # Add assistant response to history
+        assistant_message = {
+            "role": "assistant",
+            "content": result["answer"],
+            "sources": result.get("sources", []),
+            "stats": {
+                "chunks": result.get("chunks_retrieved", 0),
+                "tokens": result.get("tokens_used", 0),
+                "time": elapsed_time,
+            },
+        }
 
-    # Rerun to show new message
-    st.rerun()
+        st.session_state.messages.append(assistant_message)
 
-# Example questions (show when chat is empty)
-if not st.session_state.messages:
-    st.markdown("##### 💡 Try asking:")
+        # Update global stats
+        st.session_state.total_queries += 1
+        st.session_state.total_tokens += result.get("tokens_used", 0)
 
-    col1, col2 = st.columns(2)
+        # Rerun to show new message
+        st.rerun()
 
-    with col1:
-        if st.button("📅 What is the remote work policy?"):
-            user_question = "What is the remote work policy?"
-            st.session_state.messages.append({"role": "user", "content": user_question})
-            st.rerun()
+    # Example questions (show when chat is empty)
+    if not st.session_state.messages:
+        col1, col2 = st.columns(2)
 
-        if st.button("💰 When are expense reports due?"):
-            user_question = "When are expense reports due?"
-            st.session_state.messages.append({"role": "user", "content": user_question})
-            st.rerun()
+        with col1:
+            if st.button("📅 What is the remote work policy?"):
+                user_question = "What is the remote work policy?"
+                st.session_state.messages.append(
+                    {"role": "user", "content": user_question}
+                )
+                st.rerun()
 
-    with col2:
-        if st.button("🏖️ How many vacation days do I get?"):
-            user_question = "How many vacation days do I get?"
-            st.session_state.messages.append({"role": "user", "content": user_question})
-            st.rerun()
+            if st.button("💰 When are expense reports due?"):
+                user_question = "When are expense reports due?"
+                st.session_state.messages.append(
+                    {"role": "user", "content": user_question}
+                )
+                st.rerun()
 
-        if st.button("🔒 What are the security requirements?"):
-            user_question = "What are the security requirements?"
-            st.session_state.messages.append({"role": "user", "content": user_question})
-            st.rerun()
+        with col2:
+            if st.button("🏖️ How many vacation days do I get?"):
+                user_question = "How many vacation days do I get?"
+                st.session_state.messages.append(
+                    {"role": "user", "content": user_question}
+                )
+                st.rerun()
+
+            if st.button("🔒 What are the security requirements?"):
+                user_question = "What are the security requirements?"
+                st.session_state.messages.append(
+                    {"role": "user", "content": user_question}
+                )
+                st.rerun()
