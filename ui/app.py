@@ -63,6 +63,7 @@ st.markdown(
         margin: 0.5rem 0;
         font-size: 0.9rem;
     }
+    
 </style>
 """,
     unsafe_allow_html=True,
@@ -77,6 +78,21 @@ if "total_queries" not in st.session_state:
 
 if "total_tokens" not in st.session_state:
     st.session_state.total_tokens = 0
+
+if "pending_question" not in st.session_state:
+    st.session_state.pending_question = None
+
+
+def handle_user_question(question: str):
+    # 1. Add user message immediately
+    st.session_state.messages.append({"role": "user", "content": question})
+
+    # 2. Mark question as pending (assistant not answered yet)
+    st.session_state.pending_question = question
+
+    # 3. Rerun so UI updates immediately
+    st.rerun()
+
 
 # Sidebar
 with st.sidebar:
@@ -172,45 +188,7 @@ with center:
     user_question = st.chat_input("Ask a question about company policies...")
 
     if user_question:
-        # Add user message to history
-        st.session_state.messages.append({"role": "user", "content": user_question})
-
-        # Show user message immediately
-        st.markdown(
-            f'<div class="user-message"><strong>You:</strong> {user_question}</div>',
-            unsafe_allow_html=True,
-        )
-
-        # Query the RAG system
-        with st.spinner("🔍 Searching documents..."):
-            import time
-
-            start_time = time.time()
-
-            result = query(user_question)
-
-            elapsed_time = time.time() - start_time
-
-        # Add assistant response to history
-        assistant_message = {
-            "role": "assistant",
-            "content": result["answer"],
-            "sources": result.get("sources", []),
-            "stats": {
-                "chunks": result.get("chunks_retrieved", 0),
-                "tokens": result.get("tokens_used", 0),
-                "time": elapsed_time,
-            },
-        }
-
-        st.session_state.messages.append(assistant_message)
-
-        # Update global stats
-        st.session_state.total_queries += 1
-        st.session_state.total_tokens += result.get("tokens_used", 0)
-
-        # Rerun to show new message
-        st.rerun()
+        handle_user_question(user_question)
 
     # Example questions (show when chat is empty)
     if not st.session_state.messages:
@@ -218,30 +196,49 @@ with center:
 
         with col1:
             if st.button("📅 What is the remote work policy?"):
-                user_question = "What is the remote work policy?"
-                st.session_state.messages.append(
-                    {"role": "user", "content": user_question}
-                )
-                st.rerun()
+                handle_user_question("What is the remote work policy?")
 
             if st.button("💰 When are expense reports due?"):
-                user_question = "When are expense reports due?"
-                st.session_state.messages.append(
-                    {"role": "user", "content": user_question}
-                )
-                st.rerun()
+                handle_user_question("When are expense reports due?")
 
         with col2:
             if st.button("🏖️ How many vacation days do I get?"):
-                user_question = "How many vacation days do I get?"
-                st.session_state.messages.append(
-                    {"role": "user", "content": user_question}
-                )
-                st.rerun()
+                handle_user_question("How many vacation days do I get?")
 
             if st.button("🔒 What are the security requirements?"):
-                user_question = "What are the security requirements?"
-                st.session_state.messages.append(
-                    {"role": "user", "content": user_question}
-                )
-                st.rerun()
+                handle_user_question("What are the security requirements?")
+
+        # If there is a pending question, generate the assistant response
+    if st.session_state.pending_question:
+        with st.spinner("🔍 Retrieving your answer..."):
+            import time
+
+            question = st.session_state.pending_question
+            start_time = time.time()
+
+            result = query(question)
+
+            elapsed_time = time.time() - start_time
+
+        # Append assistant message
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": result["answer"],
+                "sources": result.get("sources", []),
+                "stats": {
+                    "chunks": result.get("chunks_retrieved", 0),
+                    "tokens": result.get("tokens_used", 0),
+                    "time": elapsed_time,
+                },
+            }
+        )
+
+        # Update stats
+        st.session_state.total_queries += 1
+        st.session_state.total_tokens += result.get("tokens_used", 0)
+
+        # Clear pending question
+        st.session_state.pending_question = None
+
+        st.rerun()
