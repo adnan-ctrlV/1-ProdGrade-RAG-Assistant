@@ -1,4 +1,4 @@
-# 🤖 Company AI Assistant
+# 🤖 AI RAG Assistant
 
 A production-grade RAG (Retrieval-Augmented Generation) system that lets you chat with your company documents/policies using AI.
 
